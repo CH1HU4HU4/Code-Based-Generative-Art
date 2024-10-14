@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Wave Grid</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #333;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(50, 10px); /* Reduced to 10px for even smaller squares */
+            grid-template-rows: repeat(50, 10px); /* Reduced to 10px for even smaller squares */
+            gap: 1px; /* Reduced gap for smaller black space between squares */
+        }
+        .square {
+            width: 10px; /* Reduced to 10px for even smaller squares */
+            height: 10px; /* Reduced to 10px for even smaller squares */
+            transition: background-color 0.2s ease, transform 0.2s ease; /* Transition time reduced to 0.2s */
+            background-color: rgb(255, 255, 255); /* Start with white */
+        }
+        .grow {
+            transform: scale(1.5); /* Temporary grow effect */
+        }
+    </style>
+</head>
+<body>
+
+<div class="grid" id="grid"></div>
+
+<script>
+    const gridSize = 50;
+    const gridContainer = document.getElementById('grid');
+    
+    // Create the grid of squares with random colors
+    const createGrid = () => {
+        for (let i = 0; i < gridSize * gridSize; i++) {
+            const square = document.createElement('div');
+            square.classList.add('square');
+            square.style.backgroundColor = getRandomColor();
+            gridContainer.appendChild(square);
+        }
+    };
+
+    // Get a random color with peak brightness and saturation
+    const getRandomColor = () => {
+        const hue = Math.floor(Math.random() * 360);
+        return `hsl(${hue}, 100%, 50%)`;
+    };
+
+    // Handle the wave effect
+    const waveEffect = () => {
+        let currentColumn = gridSize - 1;
+
+        // Clear previous grow classes
+        Array.from(gridContainer.children).forEach(square => square.classList.remove('grow'));
+
+        const interval = setInterval(() => {
+            if (currentColumn < 0) {
+                clearInterval(interval);
+            } else {
+                const colorUpdates = []; // Store new colors for batch update
+                const growSquares = [];  // Store squares to grow
+
+                for (let row = 0; row < gridSize; row++) {
+                    const index = row * gridSize + currentColumn;
+                    const square = gridContainer.children[index];
+
+                    // Determine new color
+                    const newColor = getRandomColor();
+                    const nextIndex = (currentColumn + 1) < gridSize ? row * gridSize + currentColumn + 1 : index;
+                    const nextSquare = gridContainer.children[nextIndex];
+                    
+                    // 75% chance of changing the color to the square to its right
+                    const finalColor = nextSquare && Math.random() < 0.75 ? nextSquare.style.backgroundColor : newColor;
+                    colorUpdates.push({ square, color: finalColor });
+
+                    // Mark the square to grow
+                    growSquares.push(square);
+                }
+
+                // Apply all color updates and grow effect
+                colorUpdates.forEach(({ square, color }) => {
+                    square.style.backgroundColor = color;
+                });
+
+                growSquares.forEach(square => {
+                    square.classList.add('grow');
+                });
+
+                // Remove grow effect after 0.2s
+                setTimeout(() => {
+                    growSquares.forEach(square => {
+                        square.classList.remove('grow');
+                    });
+                }, 200); // Grow for 0.2 seconds
+
+                currentColumn--;
+            }
+        }, 200); // Wave moves column by column every 0.2 seconds
+    };
+
+    // Create grid and start the wave effect immediately
+    createGrid();
+    waveEffect(); // Start the first wave immediately
+    setInterval(waveEffect, 10000); // Trigger wave effect every 10 seconds
+
+</script>
+
+</body>
+</html>
